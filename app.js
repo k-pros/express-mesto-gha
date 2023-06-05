@@ -2,12 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const router = require('./routes');
+const { dbUrl, portNumber} = require('./utils/config');
 
-const { PORT = 3000 } = process.env;
+const { PORT = portNumber } = process.env;
 
 const app = express();
 
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
+mongoose.connect(dbUrl);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
