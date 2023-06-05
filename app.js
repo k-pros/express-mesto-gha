@@ -8,7 +8,7 @@ const { PORT = portNumber } = process.env;
 
 const app = express();
 
-mongoose.connect(dbUrl);
+mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
 app.use(express.static(path.join(__dirname, 'public')));
 

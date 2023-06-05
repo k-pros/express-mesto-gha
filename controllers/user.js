@@ -14,12 +14,18 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
+    .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
+        res.status(ERROR_CODE_INCORRECT).send({ message: 'Переданы некорректные данные' });
+        return;
+      }
+      if (err.name === 'DocumentNotFoundError') {
         res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден.' });
         return;
       }
+
       res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка сервера' });
     });
 };
