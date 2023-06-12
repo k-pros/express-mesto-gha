@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const bcrypt = require('bcryptjs');
 const {
   ERROR_CODE_INCORRECT,
   ERROR_CODE_NOT_FOUND,
@@ -30,14 +31,17 @@ module.exports.getUserById = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  const { name, about, avatar, email, password } = req.body;
+
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({ name, about, avatar, email, password: hash }))
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(ERROR_CODE_INCORRECT).send({ message: 'Переданы некорректные данные при создании пользователя.' });
         return;
       }
+      console.log(err.message);
       res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка сервера' });
     });
 };
