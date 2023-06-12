@@ -46,6 +46,24 @@ module.exports.getUserById = (req, res) => {
     });
 };
 
+module.exports.getUserInfo = (req, res) => {
+  User.findOne({ _id: req.user._id })
+    .then((user) => {
+      if (!user) {
+        res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден.' });
+        return;
+      }
+      return res.send({ data: user })
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(ERROR_CODE_INCORRECT).send({ message: 'Переданы некорректные данные' });
+        return;
+      }
+      res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка сервера' });
+    });
+};
+
 module.exports.createUser = (req, res) => {
   const { name, about, avatar, email, password } = req.body;
 
@@ -57,7 +75,6 @@ module.exports.createUser = (req, res) => {
         res.status(ERROR_CODE_INCORRECT).send({ message: 'Переданы некорректные данные при создании пользователя.' });
         return;
       }
-      console.log(err.message);
       res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка сервера' });
     });
 };

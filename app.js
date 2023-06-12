@@ -10,15 +10,6 @@ const app = express();
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
-// временное решение авторизации
-app.use((req, res, next) => {
-  req.user = {
-    _id: '64784d01e11468c8fd48461f',
-  };
-
-  next();
-});
-
 app.use(express.json());
 
 app.post('/signin', login);
