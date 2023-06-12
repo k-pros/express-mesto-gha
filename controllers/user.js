@@ -1,10 +1,26 @@
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const {
   ERROR_CODE_INCORRECT,
   ERROR_CODE_NOT_FOUND,
   ERROR_CODE_DEFAULT,
+  ERROR_CODE_UNAUTHORIZED,
 } = require('../utils/errors');
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+
+  User.findUserByCredentials(email, password)
+    .then((user) => {
+      res.send({
+        token: jwt.sign({ _id: user._id }, 'super-strong-secret-key', { expiresIn: '7d' })
+      });
+    })
+    .catch((err) => {
+      res.status(ERROR_CODE_UNAUTHORIZED).send({ message: 'Неправильные пользователь или пароль' });
+    });
+};
 
 module.exports.getUsers = (req, res) => {
   User.find({})
