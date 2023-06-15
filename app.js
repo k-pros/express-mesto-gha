@@ -1,12 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { errors } = require('celebrate');
 const router = require('./routes');
 const { portNumber } = require('./utils/config');
 const { login, createUser } = require('./controllers/user');
-const { PORT = portNumber } = process.env;
 const { auth } = require('./middlewares/auth');
-const { errors } = require('celebrate');
 const { validateCreateUser, validateLogin } = require('./middlewares/validation');
+
+const { PORT = portNumber } = process.env;
 
 const app = express();
 

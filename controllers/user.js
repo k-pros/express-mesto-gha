@@ -1,6 +1,6 @@
-const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 const {
   IncorrectError,
   NotFoundError,
@@ -8,7 +8,7 @@ const {
   Conflict,
 } = require('../errors');
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   User.findUserByCredentials(email, password)
@@ -18,7 +18,7 @@ module.exports.login = (req, res) => {
       });
     })
     .catch((err) => {
-      throw new UnauthorizedError('Неправильные пользователь или пароль')
+      next(new UnauthorizedError('Неправильные пользователь или пароль'));
     });
 };
 
@@ -33,10 +33,10 @@ module.exports.getUserById = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new IncorrectError('Переданы некорректные данные');
+        return next(new IncorrectError('Переданы некорректные данные'));
       }
       if (err.name === 'DocumentNotFoundError') {
-        throw new NotFoundError('Пользователь с указанным _id не найден.');
+        return next(new NotFoundError('Пользователь с указанным _id не найден.'));
       }
       next(err);
     });
@@ -48,10 +48,10 @@ module.exports.getUserById = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new IncorrectError('Переданы некорректные данные');
+        return next(new IncorrectError('Переданы некорректные данные'));
       }
       if (err.name === 'DocumentNotFoundError') {
-        throw new NotFoundError('Пользователь с указанным _id не найден.');
+        return next(new NotFoundError('Пользователь с указанным _id не найден.'));
       }
       next(err);
     });
@@ -67,7 +67,7 @@ module.exports.getUserInfo = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new IncorrectError('Переданы некорректные данные');
+        return next(new IncorrectError('Переданы некорректные данные'));
       }
       next(err);
     });
@@ -78,13 +78,16 @@ module.exports.createUser = (req, res, next) => {
 
   bcrypt.hash(password, 10)
     .then((hash) => User.create({ name, about, avatar, email, password: hash }))
-    .then((user) => res.send(user))
+    .then((user) => {
+      const noPasswordUser = user.toObject({ useProjection: true });
+      res.send(noPasswordUser);
+    })
     .catch((err) => {
       if (err.code === 11000) {
-        throw new Conflict('Такой пользователь уже существует');
+        return next(new Conflict('Такой пользователь уже существует'));
       }
       if (err.name === 'ValidationError') {
-        throw new IncorrectError('Переданы некорректные данные при создании пользователя.');
+        return next(new IncorrectError('Переданы некорректные данные при создании пользователя.'));
       }
       next(err);
     });
@@ -101,10 +104,10 @@ module.exports.updateUser = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        throw new IncorrectError('Переданы некорректные данные при обновлении профиля.');
+        return next(new IncorrectError('Переданы некорректные данные при обновлении профиля.'));
       }
       if (err.name === 'DocumentNotFoundError') {
-        throw new NotFoundError('Пользователь с указанным _id не найден.');
+        return next(new NotFoundError('Пользователь с указанным _id не найден.'));
       }
       next(err);
     });
