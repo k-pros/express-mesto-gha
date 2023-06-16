@@ -1,4 +1,5 @@
 const { celebrate, Joi } = require('celebrate');
+
 const regexp = /https?:\/\/(www\.)?\w+[-.~:/?#[\]@!$&'()*+,;=]*#?/;
 
 const validateCreateUser = celebrate({
@@ -20,14 +21,14 @@ const validateLogin = celebrate({
 
 const validateUpdateUser = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
+    name: Joi.string().min(2).max(30).required(),
+    about: Joi.string().min(2).max(30).required(),
   }),
 });
 
 const validateAvatar = celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().pattern(regexp),
+    avatar: Joi.string().required().pattern(regexp),
   }),
 });
 

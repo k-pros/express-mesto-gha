@@ -6,6 +6,7 @@ const { portNumber } = require('./utils/config');
 const { login, createUser } = require('./controllers/user');
 const { auth } = require('./middlewares/auth');
 const { validateCreateUser, validateLogin } = require('./middlewares/validation');
+const { handleErrors } = require('./middlewares/handleErrors');
 
 const { PORT = portNumber } = process.env;
 
@@ -22,21 +23,7 @@ app.use(auth);
 app.use(router);
 
 app.use(errors()); // обработчик ошибок celebrate
-
-// централизованный обработчик
-app.use((err, req, res, next) => {
-  // если у ошибки нет статуса, выставляем 500
-  const { statusCode = 500, message } = err;
-
-  res
-    .status(statusCode)
-    .send({
-      // проверяем статус и выставляем сообщение в зависимости от него
-      message: statusCode === 500
-        ? 'На сервере произошла ошибка'
-        : message,
-    });
-});
+app.use(handleErrors); // централизованный обработчик ошибок
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

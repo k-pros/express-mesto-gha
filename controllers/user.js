@@ -4,7 +4,6 @@ const User = require('../models/user');
 const {
   IncorrectError,
   NotFoundError,
-  UnauthorizedError,
   Conflict,
 } = require('../errors');
 
@@ -14,32 +13,16 @@ module.exports.login = (req, res, next) => {
   User.findUserByCredentials(email, password)
     .then((user) => {
       res.send({
-        token: jwt.sign({ _id: user._id }, 'super-strong-secret-key', { expiresIn: '7d' })
+        token: jwt.sign({ _id: user._id }, 'super-strong-secret-key', { expiresIn: '7d' }),
       });
     })
-    .catch((err) => {
-      next(new UnauthorizedError('Неправильные пользователь или пароль'));
-    });
+    .catch(next);
 };
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
     .catch(next);
-};
-
-module.exports.getUserById = (req, res, next) => {
-  User.findById(req.params.userId)
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        return next(new IncorrectError('Переданы некорректные данные'));
-      }
-      if (err.name === 'DocumentNotFoundError') {
-        return next(new NotFoundError('Пользователь с указанным _id не найден.'));
-      }
-      next(err);
-    });
 };
 
 module.exports.getUserById = (req, res, next) => {
@@ -53,7 +36,7 @@ module.exports.getUserById = (req, res, next) => {
       if (err.name === 'DocumentNotFoundError') {
         return next(new NotFoundError('Пользователь с указанным _id не найден.'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -63,21 +46,22 @@ module.exports.getUserInfo = (req, res, next) => {
       if (!user) {
         throw new NotFoundError('Пользователь с указанным _id не найден.');
       }
-      return res.send({ data: user })
+      return res.send({ data: user });
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        return next(new IncorrectError('Переданы некорректные данные'));
-      }
       next(err);
     });
 };
 
 module.exports.createUser = (req, res, next) => {
-  const { name, about, avatar, email, password } = req.body;
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
 
   bcrypt.hash(password, 10)
-    .then((hash) => User.create({ name, about, avatar, email, password: hash }))
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
     .then((user) => {
       const noPasswordUser = user.toObject({ useProjection: true });
       res.send(noPasswordUser);
@@ -89,7 +73,7 @@ module.exports.createUser = (req, res, next) => {
       if (err.name === 'ValidationError') {
         return next(new IncorrectError('Переданы некорректные данные при создании пользователя.'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -103,13 +87,13 @@ module.exports.updateUser = (req, res, next) => {
     .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      if (err.name === 'ValidationError') {
         return next(new IncorrectError('Переданы некорректные данные при обновлении профиля.'));
       }
       if (err.name === 'DocumentNotFoundError') {
         return next(new NotFoundError('Пользователь с указанным _id не найден.'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -123,7 +107,7 @@ module.exports.updateAvatar = (req, res, next) => {
     .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      if (err.name === 'ValidationError') {
         throw new IncorrectError('Переданы некорректные данные при обновлении профиля.');
       }
       if (err.name === 'DocumentNotFoundError') {

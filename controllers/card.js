@@ -15,12 +15,12 @@ module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
   Card.create({ name, link, owner })
-    .then((card) => res.send({ data: card }))
+    .then((card) => res.status(200).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new IncorrectError('Переданы некорректные данные при создании карточки'));
+        return next(new IncorrectError('Переданы некорректные данные при создании карточки'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -33,7 +33,7 @@ module.exports.deleteCard = (req, res, next) => {
       if (card.owner.toString() !== req.user._id) {
         throw new ForbiddenError('Запрещено удалять карточки других пользователей');
       }
-      Card.findByIdAndRemove(req.params.cardId)
+      return card.deleteOne()
         .then(() => res.status(200).send(card));
     })
     .catch((err) => {
